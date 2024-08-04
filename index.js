@@ -26,6 +26,15 @@ let snake = [
 window.addEventListener("keydown", changeDirection);
 resetBtn.addEventListener("click", resetGame);
 
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+gameBoard.addEventListener("touchstart", handleTouchStart, false);
+gameBoard.addEventListener("touchmove", handleTouchMove, false);
+gameBoard.addEventListener("touchend", handleTouchEnd, false);
+
 gameStart();
 
 function gameStart(){
@@ -35,6 +44,7 @@ function gameStart(){
     drawFood();
     nextTick();
 };
+
 function nextTick(){
     if(running){
         setTimeout(()=>{
@@ -50,10 +60,12 @@ function nextTick(){
         displayGameOver();
     }
 };
+
 function clearBoard(){
     ctx.fillStyle = boardBackground;
     ctx.fillRect(0, 0, gameWidth, gameHeight);
 };
+
 function createFood(){
     function randomFood(min, max){
         const randNum = Math.round((Math.random() * (max - min) + min) / unitSize) * unitSize;
@@ -62,10 +74,12 @@ function createFood(){
     foodX = randomFood(0, gameWidth - unitSize);
     foodY = randomFood(0, gameWidth - unitSize);
 };
+
 function drawFood(){
     ctx.fillStyle = foodColor;
     ctx.fillRect(foodX, foodY, unitSize, unitSize);
 };
+
 function moveSnake(){
     const head = {x: snake[0].x + xVelocity,
                   y: snake[0].y + yVelocity};
@@ -81,6 +95,7 @@ function moveSnake(){
         snake.pop();
     }     
 };
+
 function drawSnake(){
     ctx.fillStyle = snakeColor;
     ctx.strokeStyle = snakeBorder;
@@ -89,6 +104,7 @@ function drawSnake(){
         ctx.strokeRect(snakePart.x, snakePart.y, unitSize, unitSize);
     })
 };
+
 function changeDirection(event){
     const keyPressed = event.keyCode;
     const LEFT = 37;
@@ -120,6 +136,46 @@ function changeDirection(event){
             break;
     }
 };
+
+function handleTouchStart(event) {
+    const firstTouch = event.touches[0];
+    touchStartX = firstTouch.clientX;
+    touchStartY = firstTouch.clientY;
+};
+
+function handleTouchMove(event) {
+    if (event.touches.length > 1) return; // Ignore if more than one touch
+    const touch = event.touches[0];
+    touchEndX = touch.clientX;
+    touchEndY = touch.clientY;
+};
+
+function handleTouchEnd() {
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    const absDeltaX = Math.abs(deltaX);
+    const absDeltaY = Math.abs(deltaY);
+
+    if (absDeltaX > absDeltaY) {
+        if (deltaX > 0 && xVelocity !== -unitSize) {
+            xVelocity = unitSize;
+            yVelocity = 0;
+        } else if (deltaX < 0 && xVelocity !== unitSize) {
+            xVelocity = -unitSize;
+            yVelocity = 0;
+        }
+    } else {
+        if (deltaY > 0 && yVelocity !== -unitSize) {
+            xVelocity = 0;
+            yVelocity = unitSize;
+        } else if (deltaY < 0 && yVelocity !== unitSize) {
+            xVelocity = 0;
+            yVelocity = -unitSize;
+        }
+    }
+};
+
 function checkGameOver(){
     switch(true){
         case (snake[0].x < 0):
@@ -141,6 +197,7 @@ function checkGameOver(){
         }
     }
 };
+
 function displayGameOver(){
     ctx.font = "50px MV Boli";
     ctx.fillStyle = "black";
@@ -148,6 +205,7 @@ function displayGameOver(){
     ctx.fillText("GAME OVER!", gameWidth / 2, gameHeight / 2);
     running = false;
 };
+
 function resetGame(){
     score = 0;
     xVelocity = unitSize;
